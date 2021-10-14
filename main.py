@@ -154,8 +154,92 @@ print(f"Y_test shape new length: {len(Y_test)}")
 
 print(f"Y_val shape new length: {len(Y_val)}")
 
+'''
+Training Model using CNN
+'''
 
 
+
+model = Sequential()
+
+'''
+Passing the model through a convolution model 
+Activation method used is relu
+'''
+model.add(Conv2D(32, (3, 3), padding="same", input_shape=X_train.shape[1:]))
+model.add(Activation("relu"))
+model.add(MaxPooling2D(2, 2))
+model.add(Dropout(0.2))
+
+model.add(Conv2D(64, (3, 3), padding="same"))
+model.add(Activation("relu"))
+model.add(MaxPooling2D(2, 2))
+model.add(Dropout(0.2))
+
+model.add(Conv2D(128, (3, 3), padding="same"))
+model.add(Activation("relu"))
+model.add(MaxPooling2D(2, 2))
+model.add(Dropout(0.2))
+
+
+#Flattening the model into 1D array
+model.add(Flatten())
+model.add(Dense(256, activation="relu"))
+
+model.add(Dense(1))
+model.add(Activation("sigmoid"))
+
+
+
+'''
+Use squared error to reduce loss
+
+Number of epochs run is 20
+'''
+model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+history = model.fit(X_train, Y_train, epochs=10, validation_data=(X_val, Y_val), shuffle=True)
+scores = model.evaluate(X_test, Y_test)
+
+model.save("cnn.model")
+
+
+
+# Accuracy and loss scores
+print("Test loss {}".format(scores[0]))
+print("Test accuracy {}".format(scores[1]))
+
+
+
+# visualizing the accuracy and loss of model
+
+accuracy = history.history['accuracy']
+val_accuracy = history.history['val_accuracy']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+epochs = range(len(accuracy))
+
+plt.plot(epochs, accuracy, "b", label="training accuracy")
+plt.plot(epochs, val_accuracy, "r", label="validation accuracy")
+plt.legend()
+plt.show()
+
+plt.plot(epochs, loss, "b", label="training loss")
+plt.plot(epochs, val_loss, "r", label="validation loss")
+plt.legend()
+plt.show()
+
+
+labels = ["NORMAL", "PNEUMONIA"]
+def prepare(filepath):
+    img_array = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+    new_array = cv2.resize(img_array, (img_size, img_size))
+    return new_array.reshape(-1, img_size, img_size, 1)
+
+model = tf.keras.models.load_model("cnn.model") # load model
+
+# extra pneumonia photo from google
+prediction = model.predict([prepare("xray_dataset/chest_xray/chest_xray/test/PNEUMONIA/person1_virus_6.jpeg")])
+print(f'Predicted value : {labels[int(prediction[0])]}')
 
 
 
